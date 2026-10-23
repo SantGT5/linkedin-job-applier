@@ -1,0 +1,70 @@
+name: applier
+
+x-backend-env: &backend-env
+  DATABASE_URL: postgresql+psycopg://applier:${POSTGRES_PASSWORD:?run make up to create .env}@postgres:5432/applier
+  DATA_DIR: /data
+  TZ: ${TZ:-UTC}
+
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: applier
+      POSTGRES_DB: applier
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?run make up to create .env}
+      TZ: ${TZ:-UTC}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U applier -d applier"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/stack/api.Dockerfile
+    image: applier-api
+    restart: unless-stopped
+    env_file: ../.env
+    environment: *backend-env
+    volumes:
+      - data:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: ..
+      dockerfile: docker/stack/worker.Dockerfile
+    image: applier-worker
+    restart: unless-stopped
+    env_file: ../.env
+    environment: *backend-env
+    shm_size: 2gb
+    volumes:
+      - data:/data
+    depends_on:
+      api:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/stack/frontend.Dockerfile
+    image: applier-frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:80"
+    depends_on:
+      api:
+        condition: service_healthy
+      worker:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  data:

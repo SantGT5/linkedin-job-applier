@@ -1,0 +1,27 @@
+[project]
+name = "applier"
+version = "1.0.0"
+description = "LinkedIn auto-apply bot: api + worker services"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "sqlalchemy>=2.0.36",
+    "alembic>=1.14",
+    "psycopg[binary]>=3.2",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    "itsdangerous>=2.2",
+    "python-multipart>=0.0.17",
+    "undetected-chromedriver==3.5.5",
+    "PyAutoGUI==0.9.54",
+    "anthropic==0.112.0",
+    "openai==2.38.0",
+    "setuptools",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "lxml>=5", "httpx>=0.27"]
+
+[tool.setuptools]
+packages = []

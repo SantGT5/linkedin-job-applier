@@ -1,0 +1,10 @@
+Job ID,Title,Company,Work Location,Work Style,About Job,Experience required,Skills required,HR Name,HR Link,Resume,Re-posted,Date Posted,Date Applied,Job Link,External Job link,Questions Found,Connect Request
+1001,Backend Engineer,Acme,"Remote, US",Remote,"About
+multi-line",3,['python'],Unknown,Unknown,Previous resume,False,2026-10-21 10:00:00.000001,2026-10-22 14:43:33.602553,https://www.linkedin.com/jobs/view/1001,Easy Applied,"{('Q','A','text','')}",In Development
+1002,Go Developer,Acme,"Remote, US",Remote,"About
+multi-line",3,['python'],Unknown,Unknown,Previous resume,False,2026-10-21 10:00:00.000001,2026-10-22 14:43:33.602553,https://www.linkedin.com/jobs/view/1002,Easy Applied,"{('Q','A','text','')}",In Development
+1001,Backend Engineer (dup),Acme,"Remote, US",Remote,"About
+multi-line",3,['python'],Unknown,Unknown,Previous resume,False,2026-10-21 10:00:00.000001,2026-10-22 14:43:33.602553,https://www.linkedin.com/jobs/view/1001,Easy Applied,"{('Q','A','text','')}",In Development
+1003,Short row
+"1004","Café Dev","Acme","Remote, US","Remote","About
+multi-line","3","['python']","Unknown","Unknown","Previous resume","False","2026-10-21 10:00:00.000001","2026-10-22 14:43:33.602553","https://www.linkedin.com/jobs/view/1004","Easy Applied","{('Q','A','text','')}","In Development"

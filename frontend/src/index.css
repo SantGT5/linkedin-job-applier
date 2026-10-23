@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ground: #eef0ec;
+  --surface: #ffffff;
+  --ink: #1c2321;
+  --muted: #56605c;
+  --line: #cbd2cc;
+  /* Borders that identify a control: 3:1 against white and the ground (WCAG 1.4.11). */
+  --control: #7d8782;
+  --pine: #1f5c4a;
+  --pine-dark: #17463a;
+  --pine-soft: #e1ebe6;
+  --signal: #e0a526;
+  --signal-soft: #fbf1d9;
+  --danger: #b42318;
+  --danger-soft: #fbe7e5;
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  @apply bg-ground font-sans text-[15px] leading-normal text-ink antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--pine);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex min-h-[40px] items-center justify-center gap-2 rounded px-4 text-sm font-medium transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-pine text-white hover:bg-pine-dark;
+  }
+  .btn-secondary {
+    @apply btn border border-control bg-surface text-ink hover:bg-ground;
+  }
+  .btn-danger {
+    @apply btn bg-danger text-white hover:opacity-90;
+  }
+  .btn-ghost {
+    @apply btn px-2 text-muted hover:bg-ground hover:text-ink;
+  }
+  .field {
+    @apply block w-full rounded border border-control bg-surface px-3 py-2 text-[15px] text-ink placeholder:text-muted focus:border-pine focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-pine;
+  }
+  .label {
+    @apply mb-1 block text-sm font-medium text-ink;
+  }
+  .help {
+    @apply mt-1 text-[13px] leading-snug text-muted;
+  }
+  .panel {
+    @apply rounded-lg border border-line bg-surface;
+  }
+}

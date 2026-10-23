@@ -1,0 +1,9 @@
+username = "fake-user@example.org"
+password = "fake-password-123"
+use_AI = True
+ai_provider = "glm"
+claude_api_key = ""
+glm_api_key = "fake-glm-key-in-file"
+glm_model = "glm-4.6"
+llm_model = "gpt-4o"
+stream_output = False

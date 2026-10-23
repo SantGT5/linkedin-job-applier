@@ -1,0 +1,130 @@
+<!doctype html>
+<!--
+  Hand-written, minimal reproduction of LinkedIn's AI-powered jobs search page
+  (/jobs/search-results/), mirroring the DOM structure observed on 2026-10-15.
+  All names and job data are fictional. CSS classes are omitted: on the real page
+  they're randomized per build, so selectors must not depend on them.
+-->
+<html>
+<head><meta charset="utf-8"></head>
+<body>
+<main id="workspace">
+  <div id="JobsSearchFilters" componentkey="JobsSearchFilters">
+    <div role="radio" aria-label="Filter by Past 24 hours" aria-checked="true"><span>Past 24 hours</span></div>
+    <div role="radio" aria-label="Filter by Easy Apply" aria-checked="false"><span>Easy Apply</span></div>
+  </div>
+
+  <div data-testid="lazy-column" componentkey="SearchResultsMainContent">
+
+    <!-- Card 1: currently selected job, Easy Apply -->
+    <div role="button" tabindex="0" componentkey="job-card-component-ref-1000000001">
+      <div componentkey="job-card-component-ref-1000000001">
+        <div><figure aria-hidden="true"><img alt=""></figure>
+          <div><div><div><div>
+            <div data-display-contents="true">
+              <p><span>Selected, Senior Python Developer (Verified job)</span><span aria-hidden="true">Senior Python Developer<span> </span><span aria-hidden="true"><svg></svg></span></span></p>
+            </div>
+            <div><p>Acme Robotics</p></div>
+            <p>United States (Remote)</p>
+          </div></div>
+          <div><button type="button" aria-label="Dismiss Senior Python Developer job"><span><svg></svg></span></button></div></div>
+          <div><div>
+            <p>Viewed</p><p> · </p><p>Be an early applicant</p><p> · </p>
+            <p><span>Posted 15 hours ago</span><span aria-hidden="true">15 hours ago</span></p><p> · </p>
+            <div><svg></svg><p>Easy Apply</p></div>
+          </div></div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- Card 2: title starts with "Applied" but the job was NOT applied to -->
+    <div role="button" tabindex="0" componentkey="job-card-component-ref-1000000002">
+      <div componentkey="job-card-component-ref-1000000002">
+        <div><figure aria-hidden="true"><img alt=""></figure>
+          <div><div><div><div>
+            <div data-display-contents="true">
+              <p><span></span><span aria-hidden="true">Applied Data Engineer<span> </span></span></p>
+            </div>
+            <div><p>Globex</p></div>
+            <p>Berlin, Germany (Hybrid)</p>
+          </div></div>
+          <div><button type="button" aria-label="Dismiss Applied Data Engineer job"><span><svg></svg></span></button></div></div>
+          <div><div>
+            <p><span>Posted 2 hours ago</span><span aria-hidden="true">2 hours ago</span></p>
+          </div></div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- Card 3: already applied -->
+    <div role="button" tabindex="0" componentkey="job-card-component-ref-1000000003">
+      <div componentkey="job-card-component-ref-1000000003">
+        <div><figure aria-hidden="true"><img alt=""></figure>
+          <div><div><div><div>
+            <div data-display-contents="true">
+              <p><span></span><span aria-hidden="true">Backend Engineer</span></p>
+            </div>
+            <div><p>Initech</p></div>
+            <p>Toronto, ON</p>
+          </div></div>
+          <div><button type="button" aria-label="Dismiss Backend Engineer job"><span><svg></svg></span></button></div></div>
+          <div><div>
+            <p>Applied</p><p> · </p>
+            <p><span>Posted 1 day ago</span><span aria-hidden="true">1 day ago</span></p>
+          </div></div>
+        </div></div>
+      </div>
+    </div>
+
+    <div>
+      <button data-testid="pagination-controls-prev-button-hidden" type="button">Previous</button>
+      <ul data-testid="pagination-controls-list">
+        <li><button aria-label="Page 1" aria-current="true" type="button" data-testid="pagination-indicator-0">1</button></li>
+        <li><button aria-label="Page 2" aria-current="false" type="button" data-testid="pagination-indicator-1">2</button></li>
+        <li><button aria-label="Page 3" aria-current="false" type="button" data-testid="pagination-indicator-2">3</button></li>
+      </ul>
+      <button data-testid="pagination-controls-next-button-visible" type="button">Next</button>
+    </div>
+  </div>
+
+  <!-- Detail panel for the selected job (1000000001) -->
+  <div data-testid="lazy-column">
+    <div data-sdui-screen="com.linkedin.sdui.flagshipnav.jobs.SemanticJobDetails">
+      <div data-testid="lazy-column" componentkey="detail-column">
+        <div aria-label="Company, Acme Robotics."><a href="https://www.linkedin.com/company/acme-robotics/life/">Acme Robotics</a></div>
+        <p><a href="https://www.linkedin.com/jobs/view/1000000001/?trackingId=abc">Senior Python Developer</a></p>
+        <p><span>United States</span><span> · </span><span>15 hours ago</span><span> · </span><span>Over 100 applicants</span></p>
+        <div>
+          <button type="button" aria-label="Easy Apply to this job"><span>Easy Apply</span></button>
+          <button type="button" aria-label="Save the job"><span>Save</span></button>
+        </div>
+
+        <div id="JobDetailsPeopleWhoCanHelpSlot_1000000001" componentkey="JobDetailsPeopleWhoCanHelpSlot_1000000001">
+          <h2>People you can reach out to</h2>
+          <a href="https://www.linkedin.com/in/some-alumnus/"><p>School Alumnus</p></a>
+          <h2>Meet the hiring team</h2>
+          <a tabindex="0" href="https://www.linkedin.com/in/jane-hirer/"><div><div><div>
+            <p><span>Jane Hirer<span> </span><span role="img" aria-label="Verified"><svg></svg></span></span></p>
+            <p>• 3rd</p></div>
+            <div><p><span>Head of Engineering @ Acme Robotics</span></p></div>
+            <p>Job poster</p></div></div></a>
+          <a href="https://www.linkedin.com/messaging/compose/?profileUrn=x" aria-label="Message">Message</a>
+        </div>
+
+        <div id="JobDetails_AboutTheJob_1000000001" componentkey="JobDetails_AboutTheJob_1000000001">
+          <h2>About the job</h2>
+          <span data-testid="expandable-text-box"><p>We build robots.</p><p>Requirements: 5+ years of Python.</p><button data-testid="expandable-text-button">…<span>more</span></button></span>
+        </div>
+
+        <div id="JobDetails_AboutTheCompany_1000000001" componentkey="JobDetails_AboutTheCompany_1000000001">
+          <h2>About the company</h2>
+          <a href="https://www.linkedin.com/company/acme-robotics/life/">Acme Robotics</a>
+          <p>Robotics • 51-200 employees</p>
+          <span data-testid="expandable-text-box">Acme Robotics builds warehouse robots.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

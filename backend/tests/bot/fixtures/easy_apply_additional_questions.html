@@ -1,0 +1,53 @@
+<!doctype html>
+<!--
+  Hand-written, minimal reproduction of LinkedIn's Easy Apply dialog ("Additional Questions" page),
+  mirroring the DOM structure observed on 2026-10-15. Screening questions have no <label>: the
+  question is a <p> and the input carries it in aria-label. All data is fictional.
+-->
+<html>
+<head><meta charset="utf-8"></head>
+<body>
+<dialog data-testid="dialog" aria-labelledby="dialog-header" open="">
+  <div>
+    <header id="dialog-header"><h2>Apply to Acme Robotics</h2></header>
+    <div data-testid="dialog-content">
+      <div data-sdui-screen="com.linkedin.sdui.flagshipnav.jobs.easyapply.EasyApply">
+        <div data-testid="lazy-column" data-component-type="LazyColumn"><div>
+          <p>Additional Questions</p>
+          <div>
+            <div>
+              <p>How many years of work experience do you have with Python?*</p>
+              <div componentkey="easyApplyFieldFocus_ea_validation_p2_0_1">
+                <div><input required="" id="_r_6n_" dir="auto" aria-label="How many years of work experience do you have with Python?" type="text" value="7"></div>
+                <div data-testid="text-input-helper-text" id="_r_6n_-info"><div><p><span aria-hidden="true">1/20</span><span>1 of 20 characters</span></p></div></div>
+              </div>
+            </div>
+            <div>
+              <p>How many years of work experience do you have with Django?*</p>
+              <div componentkey="easyApplyFieldFocus_ea_validation_p2_0_2">
+                <div><input required="" id="_r_6o_" dir="auto" aria-label="How many years of work experience do you have with Django?" type="text" value=""></div>
+                <div data-testid="text-input-helper-text" id="_r_6o_-info"><div><p><span aria-hidden="true">0/20</span><span>0 of 20 characters</span></p></div></div>
+              </div>
+            </div>
+            <!-- Typeahead: no label and no aria-label; the question is a <p> inside the wrapper. -->
+            <div data-display-contents="true">
+              <div componentkey="easyApplyFieldFocus_ea.q::3::UNKNOWN::value.validation">
+                <p>Location (city)*</p>
+                <div role="status" aria-live="polite" aria-atomic="true"></div>
+                <div data-expanded="false"><div><input id="_r_5v_" data-testid="typeahead-input" autocomplete="off" dir="auto" placeholder="Enter city or location" aria-autocomplete="list" value=""></div></div>
+              </div>
+            </div>
+            <!-- The marker is on the <textarea> itself, not on a wrapper. -->
+            <div>
+              <p>Summary</p>
+              <div><textarea id="_r_66_" dir="auto" aria-label="Summary" rows="4" componentkey="easyApplyFieldFocus_ea_validation_p1_0_4"></textarea></div>
+            </div>
+          </div>
+        </div></div>
+        <footer><button type="button"><span><span>Back</span></span></button><button type="button"><span><span>Review</span></span></button></footer>
+      </div>
+    </div>
+  </div>
+</dialog>
+</body>
+</html>

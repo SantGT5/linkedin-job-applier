@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+
+# AI agent / tooling state
+.claude/
+.maestri/
+.superpowers
+graphify-out/
+
+# Legacy bot data and config (seed source only; anchored so backend/ files are not hidden)
+/config/
+/all excels/
+/all resumes/
+/logs/
+/old/
+apikeys.py
+
+# Secrets and local state
+.env
+.env.*
+!.env.example
+backups/
+applier-settings*.json
+
+# Frontend
+node_modules/
+frontend/dist/
+frontend/coverage/
+*.tsbuildinfo

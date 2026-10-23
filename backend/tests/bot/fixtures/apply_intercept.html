@@ -1,0 +1,23 @@
+<!doctype html>
+<!--
+  Hand-written, minimal reproduction of LinkedIn's "This job may not be the best fit" prompt,
+  shown after clicking Easy Apply, mirroring the DOM structure observed on 2026-10-15.
+  All data is fictional.
+-->
+<html>
+<head><meta charset="utf-8"></head>
+<body>
+<dialog data-testid="dialog" open="">
+  <button type="button" aria-label="Dismiss"><span><svg></svg></span></button>
+  <div data-sdui-screen="com.linkedin.sdui.flagshipnav.jobs.ApplyInterceptModal">
+    <h2>This job may not be the best fit — position yourself to stand out</h2>
+    <p>You’re more likely to hear back if you focus on stronger matches or <a href="https://www.linkedin.com/in/me/">update your profile</a> skills and experience</p>
+    <a tabindex="0" href="https://www.linkedin.com/jobs/search-results/?currentJobId=2000000001">Senior Software Engineer</a>
+    <div>
+      <a aria-disabled="false" href="https://www.linkedin.com/jobs/view/1000000001/?companyName=Acme"><span><span>Continue applying</span></span></a>
+      <a aria-disabled="false" href="https://www.linkedin.com/jobs/search-results/?keywords=Software+Engineer"><span><span>Explore more jobs</span></span></a>
+    </div>
+  </div>
+</dialog>
+</body>
+</html>

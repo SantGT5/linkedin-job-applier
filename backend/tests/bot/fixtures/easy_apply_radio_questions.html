@@ -1,0 +1,37 @@
+<!doctype html>
+<!--
+  Hand-written, minimal reproduction of LinkedIn's Easy Apply dialog with Yes/No questions,
+  mirroring the DOM structure observed on 2026-10-15. Each option is a role="radio" element
+  carrying the question in aria-label; its <label> is empty and the option text is a <p>.
+  All data is fictional.
+-->
+<html>
+<head><meta charset="utf-8"></head>
+<body>
+<dialog data-testid="dialog" open="">
+  <div data-sdui-screen="com.linkedin.sdui.flagshipnav.jobs.easyapply.EasyApply">
+    <div>
+      <div id="progress-label">75 percent complete</div>
+      <div aria-labelledby="progress-label"><svg aria-valuemin="0" aria-valuemax="100" aria-valuenow="75" role="progressbar"></svg></div>
+      <p>3/4 pages</p>
+    </div>
+    <div data-testid="lazy-column" data-component-type="LazyColumn"><div>
+      <p>Additional Questions</p>
+      <div>
+        <p>Do you have at least 5 years of experience with Python?*</p>
+        <fieldset aria-describedby="error-message-_r_5j_" role="radiogroup"><div>
+          <div role="radio" tabindex="0" aria-label="Do you have at least 5 years of experience with Python?" aria-checked="false">
+            <div><div><input id="_r_5k_" type="radio" name="radio-group-_r_5j_"><label for="_r_5k_"></label></div><div><p>Yes</p></div></div>
+          </div>
+          <div role="radio" tabindex="0" aria-label="Do you have at least 5 years of experience with Python?" aria-checked="false">
+            <div><div><input id="_r_5l_" type="radio" name="radio-group-_r_5j_"><label for="_r_5l_"></label></div><div><p>No</p></div></div>
+          </div>
+        </div></fieldset>
+        <p>This field is required</p>
+      </div>
+    </div></div>
+    <footer><button type="button"><span><span>Back</span></span></button><button type="button"><span><span>Review</span></span></button></footer>
+  </div>
+</dialog>
+</body>
+</html>

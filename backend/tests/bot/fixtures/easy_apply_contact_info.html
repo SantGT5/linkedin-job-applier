@@ -1,0 +1,56 @@
+<!doctype html>
+<!--
+  Hand-written, minimal reproduction of LinkedIn's Easy Apply dialog (contact info page),
+  mirroring the DOM structure observed on 2026-10-15. All data is fictional.
+-->
+<html>
+<head><meta charset="utf-8"></head>
+<body>
+<main id="workspace">
+  <div data-sdui-screen="com.linkedin.sdui.flagshipnav.jobs.SemanticJobDetails">
+    <button type="button" aria-label="Easy Apply to this job"><span>Easy Apply</span></button>
+  </div>
+</main>
+<dialog data-testid="dialog" aria-labelledby="dialog-header" open="">
+  <button type="button" aria-label="Dismiss"><span><svg></svg></span></button>
+  <div>
+    <header id="dialog-header"><h2>Apply to Acme Robotics</h2></header>
+    <div data-testid="dialog-content">
+      <div data-sdui-screen="com.linkedin.sdui.flagshipnav.jobs.easyapply.EasyApply">
+        <div data-display-contents="true"><div componentkey="form-1"><div><div>
+          <div>
+            <div id="progress-label">25 percent complete</div>
+            <div aria-labelledby="progress-label"><svg aria-valuemin="0" aria-valuemax="100" aria-valuenow="25" role="progressbar"></svg></div>
+            <p>1/4 pages</p>
+          </div>
+          <div><div><div data-testid="lazy-column" data-component-type="LazyColumn">
+            <div>
+              <p>Contact info</p>
+              <div><figure aria-hidden="true"><img alt=""></figure>
+                <div><div><div><p><span>Alex Example</span></p></div></div><p>Austin, Texas, United States</p></div>
+              </div>
+              <div>
+                <label for="_r_50_"><div>Email address*</div></label>
+                <div><select id="_r_50_" required=""><option value="" disabled hidden=""></option><option value="alex@example.com">alex@example.com</option></select><svg></svg></div>
+              </div>
+              <div>
+                <div>
+                  <label for="_r_52_"><div>Phone country code*</div></label>
+                  <div><select id="_r_52_" required=""><option value="" disabled hidden=""></option><option value="nl">Netherlands (+31)</option><option value="be">Belgium (+32)</option></select><svg></svg></div>
+                </div>
+                <div componentkey="easyApplyFieldFocus_ea.q::1::PHONE_MOBILE::phoneNumber.validation">
+                  <label for="_r_54_"><div>Mobile phone number*</div></label>
+                  <div><input required="" id="_r_54_" dir="auto" type="tel" value="+1 555 0100"></div>
+                </div>
+              </div>
+            </div>
+          </div></div></div>
+          <div><div><hr role="presentation"><footer><button type="button" componentkey="next-btn"><span><span>Next</span></span></button></footer></div></div>
+        </div></div></div>
+      </div>
+    </div>
+  </div>
+  <section><h2 data-testid="toasts-title">0 notifications</h2></section>
+</dialog>
+</body>
+</html>
