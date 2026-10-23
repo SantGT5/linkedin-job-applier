@@ -1,6 +1,8 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { api, errorMessage } from "../api/client";
 import type { AppliedJob, FailedJob, Page } from "../api/types";
+import { useBulkDelete } from "../components/BulkDelete";
 import DataTable, { type Column } from "../components/DataTable";
 import { DateFilter, FilterBar, TextFilter } from "../components/FilterBar";
 import Icon from "../components/Icon";
@@ -44,6 +46,32 @@ export default function History() {
     queryFn: () => api<Page<AppliedJob | FailedJob>>(`/api/history/${tab}?${query}`),
     placeholderData: keepPreviousData,
   });
+  const rows = list.data?.items;
+  const byKey = new Map<string | number, AppliedJob | FailedJob>(
+    rows?.map((r) => [tab === "applied" ? (r as AppliedJob).job_id : (r as FailedJob).id, r]) ?? [],
+  );
+  // Deleting a whole page steps back to the one before, which still has rows.
+  const onDeleted = (deleted: number) => {
+    if (rows && deleted >= rows.length && filters.page > 1) filters.setPage(filters.page - 1);
+  };
+  const deleteApplied = useBulkDelete<string>({
+    endpoint: "/api/history/applied/delete",
+    noun: ["application", "applications"],
+    note: "The bot may come back to these jobs in a later run if LinkedIn doesn't show them as applied.",
+    invalidate: [["history", "applied"]],
+    onDeleted,
+  });
+  const deleteFailed = useBulkDelete<number>({
+    endpoint: "/api/history/failed/delete",
+    noun: ["entry", "entries"],
+    invalidate: [["history", "failed"]],
+    onDeleted,
+  });
+  // A selection belongs to the rows on screen: a new tab, page or filter clears it.
+  useEffect(() => {
+    deleteApplied.clear();
+    deleteFailed.clear();
+  }, [tab, query]);
 
   function selectTab(next: Tab) {
     filters.setParams((current) => {
@@ -102,8 +130,10 @@ export default function History() {
           {...common}
           label="Applied jobs"
           columns={APPLIED}
-          rows={list.data?.items as AppliedJob[] | undefined}
+          rows={rows as AppliedJob[] | undefined}
           rowKey={(r) => r.job_id}
+          selection={{ ...deleteApplied.selection, rowLabel: (k) => `Select ${(byKey.get(k) as AppliedJob | undefined)?.title ?? k}` }}
+          toolbar={deleteApplied.bar}
           empty={filtered ? "No applications match these filters." : "No applications yet. Start the bot from the dashboard."}
         />
       ) : (
@@ -111,11 +141,15 @@ export default function History() {
           {...common}
           label="Failed or skipped jobs"
           columns={FAILED}
-          rows={list.data?.items as FailedJob[] | undefined}
+          rows={rows as FailedJob[] | undefined}
           rowKey={(r) => r.id}
+          selection={{ ...deleteFailed.selection, rowLabel: (k) => `Select job ${(byKey.get(k) as FailedJob | undefined)?.job_id ?? k}` }}
+          toolbar={deleteFailed.bar}
           empty={filtered ? "Nothing matches these filters." : "Nothing failed or was skipped yet."}
         />
       )}
+      {deleteApplied.dialog}
+      {deleteFailed.dialog}
     </div>
   );
 }

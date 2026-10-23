@@ -26,3 +26,16 @@ test("failed tab and search filter", async () => {
   await waitFor(() => expect(calls.at(-1)?.url).toContain("/api/history/failed?"));
   await waitFor(() => expect(calls.at(-1)?.url).toContain("q=bad"));
 });
+
+test("delete selected applications", async () => {
+  const { calls } = mockFetch({
+    "GET /api/history/applied": { items: [applied, { ...applied, job_id: "101", title: "Rust Developer" }], total: 2, page: 1, page_size: 25 },
+    "POST /api/history/applied/delete": { deleted: 1 },
+  });
+  renderWithProviders(<History />, { route: "/history" });
+  await userEvent.click(await screen.findByRole("checkbox", { name: "Select Rust Developer" }));
+  await userEvent.click(screen.getByRole("button", { name: "Delete selected" }));
+  expect(screen.getByRole("alertdialog", { name: "Delete 1 application?" })).toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: "Delete 1 application" }));
+  await waitFor(() => expect(calls.find((c) => c.url === "/api/history/applied/delete")?.body).toEqual({ ids: ["101"] }));
+});

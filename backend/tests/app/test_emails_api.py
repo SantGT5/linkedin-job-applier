@@ -67,3 +67,11 @@ def test_preview_fills_phone_and_linkedin(client):
         "my_name": "Jane Doe", "phone_number": "+1 555 0100", "linkedin_profile": "linkedin.com/in/janedoe",
     })
     assert r.json()["body_text"] == "+1 555 0100 linkedin.com/in/janedoe"
+
+
+def test_delete_emails(client, db):
+    _emails(db, 5)
+    ids = [i["id"] for i in client.get("/api/emails").json()["items"]]
+    assert client.post("/api/emails/delete", json={"ids": ids[:3]}).json() == {"deleted": 3}
+    assert client.get("/api/emails").json()["total"] == 2
+    assert client.post("/api/emails/delete", json={"ids": []}).status_code == 422

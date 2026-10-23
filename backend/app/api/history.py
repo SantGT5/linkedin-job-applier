@@ -1,7 +1,8 @@
 from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import or_, select
+from pydantic import BaseModel, Field
+from sqlalchemy import delete, or_, select
 from sqlalchemy.orm import Session
 
 from app.api.common import PageParams, paginate, row_dict
@@ -13,6 +14,14 @@ router = APIRouter(prefix="/api/history", tags=["history"])
 
 APPLIED_HEAVY = ("about_job", "questions_found")
 FAILED_HEAVY = ("stack_trace",)
+
+
+class AppliedIds(BaseModel):
+    ids: list[str] = Field(min_length=1, max_length=500)
+
+
+class FailedIds(BaseModel):
+    ids: list[int] = Field(min_length=1, max_length=500)
 
 
 @router.get("/applied")
@@ -32,6 +41,13 @@ def list_applied(
         stmt = stmt.where(AppliedJob.company.ilike(f"%{company}%"))
     stmt = date_range(stmt, AppliedJob.date_applied, date_from, date_to)
     return paginate(session, stmt, params, lambda row: row_dict(row, APPLIED_HEAVY))
+
+
+@router.post("/applied/delete")
+def delete_applied(body: AppliedIds, session: Session = Depends(get_session)) -> dict:
+    result = session.execute(delete(AppliedJob).where(AppliedJob.job_id.in_(body.ids)))
+    session.commit()
+    return {"deleted": result.rowcount}
 
 
 @router.get("/applied/{job_id}")
@@ -56,6 +72,13 @@ def list_failed(
         stmt = stmt.where(or_(FailedJob.job_id.ilike(like), FailedJob.assumed_reason.ilike(like), FailedJob.job_link.ilike(like)))
     stmt = date_range(stmt, FailedJob.date_tried, date_from, date_to)
     return paginate(session, stmt, params, lambda row: row_dict(row, FAILED_HEAVY))
+
+
+@router.post("/failed/delete")
+def delete_failed(body: FailedIds, session: Session = Depends(get_session)) -> dict:
+    result = session.execute(delete(FailedJob).where(FailedJob.id.in_(body.ids)))
+    session.commit()
+    return {"deleted": result.rowcount}
 
 
 @router.get("/failed/{failed_id}")

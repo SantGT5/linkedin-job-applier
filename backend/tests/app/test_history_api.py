@@ -42,3 +42,19 @@ def test_failed_list(client, db):
     assert client.get("/api/history/failed?q=bad word").json()["total"] == 1
     fid = page["items"][0]["id"]
     assert client.get(f"/api/history/failed/{fid}").json()["stack_trace"] == "t"
+
+
+def test_delete_applied(client, db):
+    _applied(db, 3)
+    r = client.post("/api/history/applied/delete", json={"ids": ["100", "102", "nope"]})
+    assert r.json() == {"deleted": 2}
+    assert [i["job_id"] for i in client.get("/api/history/applied").json()["items"]] == ["101"]
+    assert client.post("/api/history/applied/delete", json={"ids": []}).status_code == 422
+
+
+def test_delete_failed(client, db):
+    db.add_all([FailedJob(job_id="9", date_tried=datetime(2026, 10, 2)), FailedJob(job_id="8", date_tried=datetime(2026, 10, 3))])
+    db.commit()
+    ids = [i["id"] for i in client.get("/api/history/failed").json()["items"]]
+    assert client.post("/api/history/failed/delete", json={"ids": ids[:1]}).json() == {"deleted": 1}
+    assert client.get("/api/history/failed").json()["total"] == 1

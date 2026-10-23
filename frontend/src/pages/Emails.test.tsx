@@ -112,3 +112,34 @@ test("empty list explains where emails come from", async () => {
   renderWithProviders(<Emails />, { route: "/emails" });
   expect(await screen.findByText(/No HR emails yet/)).toBeInTheDocument();
 });
+
+test("select several emails and delete them after confirming", async () => {
+  const { calls } = mockFetch({
+    "GET /api/emails": page([row(1), row(2), row(3)]),
+    "POST /api/emails/delete": { deleted: 2 },
+  });
+  renderWithProviders(<Emails />, { route: "/emails" });
+  await userEvent.click(await screen.findByRole("checkbox", { name: "Select hr1@acme.com" }));
+  await userEvent.click(screen.getByRole("checkbox", { name: "Select hr3@acme.com" }));
+  const bar = screen.getByRole("toolbar", { name: "Selected rows" });
+  expect(bar).toHaveTextContent("2 emails selected");
+  await userEvent.click(within(bar).getByRole("button", { name: "Delete selected" }));
+  const dialog = screen.getByRole("alertdialog", { name: "Delete 2 emails?" });
+  expect(calls.some((c) => c.url === "/api/emails/delete")).toBe(false);
+  await userEvent.click(within(dialog).getByRole("button", { name: "Delete 2 emails" }));
+  await waitFor(() => expect(calls.find((c) => c.url === "/api/emails/delete")?.body).toEqual({ ids: [1, 3] }));
+  expect(await screen.findByText("Deleted 2 emails.")).toBeInTheDocument();
+  expect(screen.queryByRole("toolbar", { name: "Selected rows" })).not.toBeInTheDocument();
+});
+
+test("select all on the page, then cancel the delete", async () => {
+  const { calls } = mockFetch({ "GET /api/emails": page([row(1), row(2)]) });
+  renderWithProviders(<Emails />, { route: "/emails" });
+  await userEvent.click(await screen.findByRole("checkbox", { name: "Select all on this page" }));
+  expect(screen.getByRole("toolbar", { name: "Selected rows" })).toHaveTextContent("2 emails selected");
+  await userEvent.click(screen.getByRole("button", { name: "Delete selected" }));
+  await userEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Cancel" }));
+  expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  expect(calls.some((c) => c.method === "POST")).toBe(false);
+  expect(screen.getByRole("checkbox", { name: "Select hr2@acme.com" })).toBeChecked();
+});

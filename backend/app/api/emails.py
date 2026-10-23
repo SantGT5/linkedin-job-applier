@@ -2,8 +2,8 @@ from datetime import date, datetime, timezone
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
-from sqlalchemy import or_, select
+from pydantic import BaseModel, Field
+from sqlalchemy import delete, or_, select
 from sqlalchemy.orm import Session
 
 from app.api.common import PageParams, paginate, row_dict
@@ -28,6 +28,10 @@ class Preview(BaseModel):
     my_name: str
     phone_number: str = ""
     linkedin_profile: str = ""
+
+
+class EmailIds(BaseModel):
+    ids: list[int] = Field(min_length=1, max_length=500)
 
 
 @router.get("")
@@ -82,6 +86,13 @@ def mark_new(email_id: int, session: Session = Depends(get_session)) -> dict:
     row.status, row.emailed_at = "new", None
     session.commit()
     return row_dict(row)
+
+
+@router.post("/delete")
+def delete_emails(body: EmailIds, session: Session = Depends(get_session)) -> dict:
+    result = session.execute(delete(HrEmail).where(HrEmail.id.in_(body.ids)))
+    session.commit()
+    return {"deleted": result.rowcount}
 
 
 @router.post("/preview")

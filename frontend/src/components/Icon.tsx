@@ -12,6 +12,7 @@ const PATHS = {
   download: "M12 4v12m0 0-5-5m5 5 5-5M4 20h16",
   upload: "M12 20V8m0 0-5 5m5-5 5 5M4 4h16",
   check: "M5 12l5 5L20 7",
+  trash: "M4 7h16M10 11v6M14 11v6M5 7l1 13h12l1-13M9 7V4h6v3",
 } as const;
 
 export type IconName = keyof typeof PATHS;

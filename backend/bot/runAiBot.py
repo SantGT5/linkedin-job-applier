@@ -232,7 +232,6 @@ def save_debug_page(label: str) -> None:
         return
     saved_debug_labels.add(label)
     try:
-        print_lg(f"Page URL at '{label}': {driver.current_url}")
         debug_path = (
             logs_folder_path
             + "/screenshots/"
@@ -241,7 +240,7 @@ def save_debug_page(label: str) -> None:
         driver.save_screenshot(debug_path + ".png")
         with open(debug_path + ".html", "w", encoding="utf-8") as file:
             file.write(driver.page_source)
-        print_lg(f'Saved debug screenshot and page HTML: "{debug_path}.png/.html"')
+        print_lg(f'Saved debug page "{label}" ({driver.current_url}).')
     except Exception as e:
         print_lg(f"Failed to save debug info for '{label}'!", e)
 
@@ -519,7 +518,7 @@ def check_blacklist(
             if word.lower() in about_company:
                 rejected_jobs.add(job_id)
                 blacklisted_companies.add(company)
-                raise ValueError(f'\n"{about_company_org}"\n\nContains "{word}".')
+                raise ValueError(f'About Company contains "{word}".')
     buffer(click_gap)
     scroll_to_view(driver, jobs_top_card)
     return rejected_jobs, blacklisted_companies, jobs_top_card
@@ -530,7 +529,7 @@ def extract_years_of_experience(text: str) -> int:
     # Extract all patterns like '10+ years', '5 years', '3-5 years', etc.
     matches = re.findall(re_experience, text)
     if len(matches) == 0:
-        print_lg(f"\n{text}\n\nCouldn't find experience requirement in About the Job!")
+        print_lg("Couldn't find an experience requirement in About the Job.")
         return 0
     return max([int(match) for match in matches if int(match) <= 12])
 
@@ -568,7 +567,7 @@ def get_job_description(
         jobDescriptionLow = jobDescription.lower()
         for word in bad_words:
             if word.lower() in jobDescriptionLow:
-                skipMessage = f'\n{jobDescription}\n\nContains bad word "{word}". Skipping this job!\n'
+                skipMessage = f'Contains bad word "{word}".'
                 skipReason = "Found a Bad Word in About Job"
                 skip = True
                 break
@@ -581,19 +580,19 @@ def get_job_description(
                 or "secret" in jobDescriptionLow
             )
         ):
-            skipMessage = f'\n{jobDescription}\n\nFound "Clearance" or "Polygraph". Skipping this job!\n'
+            skipMessage = 'Found "Clearance" or "Polygraph".'
             skipReason = "Asking for Security clearance"
             skip = True
         if not skip:
             if did_masters and "master" in jobDescriptionLow:
-                print_lg(f'Found the word "master" in \n{jobDescription}')
+                print_lg('Found the word "master" in About the Job.')
                 found_masters = 2
             experience_required = extract_years_of_experience(jobDescription)
             if (
                 current_experience > -1
                 and experience_required > current_experience + found_masters
             ):
-                skipMessage = f"\n{jobDescription}\n\nExperience required {experience_required} > Current Experience {current_experience + found_masters}. Skipping this job!\n"
+                skipMessage = f"Experience required {experience_required} > current experience {current_experience + found_masters}."
                 skipReason = "Required experience is high"
                 skip = True
     except Exception:
@@ -983,11 +982,7 @@ def answer_questions(
                             else:
                                 note_unanswered(label_org, "text")
                                 answer = years_of_experience
-                            if answer and isinstance(answer, str) and len(answer) > 0:
-                                print_lg(
-                                    f'AI Answered received for question "{label_org}" \nhere is answer: "{answer}"'
-                                )
-                            else:
+                            if not (answer and isinstance(answer, str)):
                                 note_unanswered(label_org, "text")
                                 answer = years_of_experience
                         except Exception as e:
@@ -1051,11 +1046,7 @@ def answer_questions(
                             else:
                                 note_unanswered(label_org, "textarea")
                                 answer = ""
-                            if answer and isinstance(answer, str) and len(answer) > 0:
-                                print_lg(
-                                    f'AI Answered received for question "{label_org}" \nhere is answer: "{answer}"'
-                                )
-                            else:
+                            if not (answer and isinstance(answer, str)):
                                 note_unanswered(label_org, "textarea")
                                 answer = ""
                         except Exception as e:
@@ -1245,10 +1236,7 @@ def apply_to_jobs(search_terms: list[str]) -> None:
             in_your_network=in_your_network,
         )
         driver.get(search_url)
-        print_lg(
-            "\n________________________________________________________________________________________________________________________\n"
-        )
-        print_lg(f'\n>>>> Now searching for "{searchTerm}" <<<<\n\n')
+        print_lg(f'>>>> Now searching for "{searchTerm}" <<<<')
         print_lg(f"Search URL: {search_url}")
 
         apply_filters()
@@ -1282,8 +1270,6 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                 for job_id in job_ids_on_page:
                     if current_count >= switch_number:
                         break
-                    print_lg("\n-@-\n")
-
                     try:
                         job = driver.find_element(By.XPATH, job_card_xpath(job_id))
                     except NoSuchElementException:
@@ -1327,7 +1313,7 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                             )
                         )
                     except ValueError as e:
-                        print_lg(e, "Skipping this job!\n")
+                        print_lg(f'Skipping "{title} | {company}": {e}')
                         failed_job(
                             job_id,
                             job_link,
@@ -1356,16 +1342,13 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                             By.XPATH, HIRER_NAME_XPATH
                         ).text
                     except Exception:
-                        print_lg(
-                            f'HR info was not given for "{title}" with Job ID: {job_id}!'
-                        )
+                        pass  # Not every job lists its hiring team.
 
                     # Calculation of date posted
                     try:
                         time_posted_text = jobs_top_card.find_element(
                             By.XPATH, TIME_POSTED_XPATH
                         ).text
-                        print("Time Posted: " + time_posted_text)
                         if time_posted_text.__contains__("Reposted"):
                             reposted = True
                             time_posted_text = time_posted_text.replace("Reposted", "")
@@ -1377,14 +1360,14 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                         get_job_description(job_id)
                     )
                     if skip:
-                        print_lg(message)
+                        print_lg(f'Skipping "{title} | {company}": {message}')
                         failed_job(
                             job_id,
                             job_link,
                             resume,
                             date_listed,
                             reason,
-                            message,
+                            f"{message}\n\n{description}",
                             "Skipped",
                             screenshot_name,
                         )
@@ -1402,7 +1385,6 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                                 skills = glm_extract_skills(aiClient, description)
                             else:
                                 skills = "In Development"
-                            print_lg(f"Extracted skills using {ai_provider} AI")
                         except Exception as e:
                             print_lg("Failed to extract skills:", e)
                             skills = "Error extracting skills"
@@ -1448,11 +1430,11 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                                         and match_score < ai_min_match_score
                                     ):
                                         message = (
-                                            f"\nAI match score {match_score} < {ai_min_match_score} "
+                                            f"AI match score {match_score} < {ai_min_match_score} "
                                             f"for '{title}' at '{company}'. Reason: {relevance_reasons}\n"
-                                            f"Missing skills: {relevance.get('missing_skills')}\n"
+                                            f"Missing skills: {relevance.get('missing_skills')}"
                                         )
-                                        print_lg(message)
+                                        print_lg(f"Skipping: AI match score {match_score} < {ai_min_match_score}.")
                                         failed_job(
                                             job_id,
                                             job_link,
@@ -1620,8 +1602,8 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                                             continue
                                         if questions_list:
                                             print_lg(
-                                                "Stuck for one or some of the following questions...",
-                                                questions_list,
+                                                "Stuck on one of these questions: "
+                                                + "; ".join(sorted(str(q[0]) for q in questions_list))
                                             )
                                         screenshot_name = screenshot(
                                             driver, job_id, "Failed at questions"
@@ -1679,17 +1661,7 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                                 errored = "nose"
                             finally:
                                 if questions_list and errored != "stuck":
-                                    print_lg(
-                                        "Answered the following questions...",
-                                        questions_list,
-                                    )
-                                    print(
-                                        "\n\n"
-                                        + "\n".join(
-                                            str(question) for question in questions_list
-                                        )
-                                        + "\n\n"
-                                    )
+                                    print_lg(f"Answered {len(questions_list)} question(s).")
                                 # Already on the review step when the loop above ended there.
                                 wait_span_click(driver, "Review", 1, scrollTop=True, quiet=True)
                                 cur_pause_before_submit = pause_before_submit
@@ -1773,9 +1745,7 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                             screenshot_name,
                         )
                         if dailyEasyApplyLimitReached:
-                            print_lg(
-                                "\n###############  Daily application limit for Easy Apply is reached!  ###############\n"
-                            )
+                            print_lg("Daily application limit for Easy Apply is reached!")
                             return
                         if skip:
                             continue
@@ -1832,9 +1802,7 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                         current_count = 0
 
                 if switch_to_next_search:
-                    print_lg(
-                        f'\n>>>> Moving to next search term after "{searchTerm}" <<<<\n'
-                    )
+                    print_lg(f'Moving to the next search term after "{searchTerm}".')
                     break
 
                 # Past this point LinkedIn only shows "related" jobs that ignore the filters.
@@ -1857,7 +1825,7 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                 ) or try_xp(driver, NEXT_PAGE_BUTTON_XPATH, False)
                 if not next_page_button:
                     print_lg(
-                        f"\n>-> Didn't find Page {next_page}. Probably at the end page of results!\n"
+                        f"Didn't find page {next_page}, probably the last page of results."
                     )
                     break
                 next_page_button.click()
@@ -1870,7 +1838,7 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                         )
                     )
                 )
-                print_lg(f"\n>-> Now on Page {next_page} \n")
+                print_lg(f">-> Now on page {next_page}")
 
         except Exception as e:
             if is_browser_gone(e):
@@ -1881,29 +1849,16 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                 raise e  # Re-raise to be caught by main
             print_lg("Failed to find Job listings!")
             critical_error_log("In Applier", e)
-            try:
-                print_lg(driver.page_source, pretty=True)
-            except Exception as page_source_error:
-                print_lg(
-                    f"Failed to get page source, browser might have crashed. {page_source_error}"
-                )
+            save_debug_page("Job listings error")
 
 
 def run(total_runs: int) -> int:
     if dailyEasyApplyLimitReached:
         return total_runs
     print_lg(
-        "\n########################################################################################################################\n"
-    )
-    print_lg(f"Date and Time: {datetime.now()}")
-    print_lg(f"Cycle number: {total_runs}")
-    print_lg(
-        f"Currently looking for jobs posted within '{date_posted or 'Any time'}' and sorting them by '{sort_by or 'LinkedIn default'}'"
+        f"==== Cycle {total_runs}: jobs posted within '{date_posted or 'Any time'}', sorted by '{sort_by or 'LinkedIn default'}' ===="
     )
     apply_to_jobs(search_terms)
-    print_lg(
-        "########################################################################################################################\n"
-    )
     if not dailyEasyApplyLimitReached:
         print_lg("Sleeping for 10 min...")
         sleep(300)
@@ -2015,25 +1970,11 @@ def main() -> str | None:
             failed_count,
             skip_count,
         )
-        print_lg(summary)
-        print_lg("\n\nTotal runs:                     {}".format(total_runs))
-        print_lg("Jobs Easy Applied:              {}".format(easy_applied_count))
-        print_lg("External job links collected:   {}".format(external_jobs_count))
-        print_lg("                              ----------")
-        print_lg(
-            "Total applied or collected:     {}".format(
-                easy_applied_count + external_jobs_count
-            )
-        )
-        print_lg("\nFailed jobs:                    {}".format(failed_count))
-        print_lg("Irrelevant jobs skipped:        {}\n".format(skip_count))
+        # The exit alert below shows the summary.
         if randomly_answered_questions:
             print_lg(
-                "\n\nQuestions randomly answered:\n  {}  \n\n".format(
-                    ";\n".join(
-                        str(question) for question in randomly_answered_questions
-                    )
-                )
+                "Questions answered randomly: "
+                + "; ".join(str(question) for question in randomly_answered_questions)
             )
         quotes = choice(
             [
@@ -2061,11 +2002,11 @@ def main() -> str | None:
             timeSavedMsg = f"In this run, you saved approx {round(timeSaved/60)} mins ({timeSaved} secs), please consider supporting the project."
         msg = f"{quotes}\n\n\n{timeSavedMsg}\nYou can also get your quote and name shown here, or prioritize your bug reports by supporting the project at:\n\nhttps://github.com/sponsors/GodsScion\n\n\nSummary:\n{summary}\n\n\nBest regards,\nSai Vignesh Golla\nhttps://www.linkedin.com/in/saivigneshgolla/\n\nTop Sponsors:\n{sponsors}"
         pyautogui.alert(msg, "Exiting..")
-        print_lg(msg, "Closing the browser...")
+        print_lg("Closing the browser...")
         if tabs_count >= 10:
             msg = "NOTE: IF YOU HAVE MORE THAN 10 TABS OPENED, PLEASE CLOSE OR BOOKMARK THEM!\n\nOr it's highly likely that application will just open browser and not do anything next time!"
             pyautogui.alert(msg, "Info")
-            print_lg("\n" + msg)
+            print_lg(msg)
         ##> ------ Yang Li : MARKYangL - Feature ------
         if use_AI and aiClient:
             try:

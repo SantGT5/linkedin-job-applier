@@ -17,6 +17,9 @@
   --signal-soft: #fbf1d9;
   --danger: #b42318;
   --danger-soft: #fbe7e5;
+  /* Text colors for the run log (4.5:1 on its background). */
+  --warn: #8a5200;
+  --info: #1f4f8f;
   color-scheme: light;
 }
 

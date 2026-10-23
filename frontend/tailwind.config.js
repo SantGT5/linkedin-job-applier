@@ -13,6 +13,8 @@ export default {
         pine: { DEFAULT: "var(--pine)", dark: "var(--pine-dark)", soft: "var(--pine-soft)" },
         signal: { DEFAULT: "var(--signal)", soft: "var(--signal-soft)" },
         danger: { DEFAULT: "var(--danger)", soft: "var(--danger-soft)" },
+        warn: "var(--warn)",
+        info: "var(--info)",
       },
       fontFamily: {
         sans: ["ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],

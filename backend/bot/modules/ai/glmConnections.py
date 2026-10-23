@@ -143,11 +143,7 @@ def glm_create_client() -> "OpenAI | None":
             messages=[{"role": "user", "content": "ping"}],
         )
 
-        print_lg("---- SUCCESSFULLY CREATED GLM CLIENT! ----")
-        print_lg(f"Using API URL: {glm_api_url}")
-        print_lg(f"Using Model: {glm_model}")
-        print_lg("Check Settings → AI and the API key in .env.\n")
-        print_lg("------------------------------------------")
+        print_lg(f"Connected to GLM, model {glm_model} at {glm_api_url}.")
         return client
     except openai.AuthenticationError as e:
         glm_show_error_alert(
@@ -224,7 +220,6 @@ def glm_extract_skills(client: "OpenAI", job_description: str) -> dict:
       required_skills, nice_to_have.
     '''
     try:
-        print_lg("-- EXTRACTING SKILLS FROM JOB DESCRIPTION using GLM")
         prompt = extract_skills_prompt.format(job_description)
         return glm_completion(client, prompt, as_json=True, temperature=0.0)
     except Exception as e:
@@ -245,7 +240,6 @@ def glm_answer_question(
     Generates a concise, human-like answer for an application question using GLM.
     '''
     try:
-        print_lg(f"-- ANSWERING QUESTION using GLM AI: {question}")
         prompt = ai_answer_prompt.format(user_information_all or "N/A", question)
 
         if options and question_type in ('single_select', 'multiple_select'):
@@ -280,7 +274,6 @@ def glm_check_job_relevance(
       apply_email (str), email_subject (str).
     * Raises on API error so the caller can decide to apply anyway (fail-open).
     '''
-    print_lg("-- CHECKING JOB RELEVANCE using GLM")
     company_line = (
         f" (Company: {about_company})" if about_company and about_company != "Unknown" else ""
     )

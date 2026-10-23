@@ -1,4 +1,4 @@
-import { act, screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { BotStatus } from "../api/types";
 import { FakeEventSource } from "../test/eventsource";
@@ -74,4 +74,20 @@ test("log lines append from stream", async () => {
   expect(log).toHaveTextContent('Now searching for "Software Engineer"');
   expect(log).toHaveTextContent("Found 25 jobs on page 1.");
   expect(screen.getByTitle("Live browser")).toHaveAttribute("src", expect.stringContaining("/novnc/vnc.html?autoconnect=1"));
+});
+
+test("log lines are colored by kind and banner lines become rules", async () => {
+  mockFetch({ "GET /api/bot/status": status() });
+  renderWithProviders(<Dashboard />);
+  await waitFor(() => expect(FakeEventSource.instances.length).toBeGreaterThan(0));
+  const source = FakeEventSource.instances.at(-1)!;
+  act(() => {
+    source.emit("________________", "message", "1");
+    source.emit("Failed to Easy apply!", "message", "2");
+    source.emit('Successfully saved "Dev | Acme" job. Job ID: 1 info', "message", "3");
+  });
+  const log = screen.getByRole("log");
+  expect(log.querySelector("hr")).not.toBeNull();
+  expect(within(log).getByText("Failed to Easy apply!")).toHaveAttribute("data-kind", "error");
+  expect(within(log).getByText(/Successfully saved/)).toHaveAttribute("data-kind", "success");
 });

@@ -1,7 +1,8 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api, errorMessage } from "../api/client";
 import type { HrEmail, Page } from "../api/types";
+import { useBulkDelete } from "../components/BulkDelete";
 import ConfirmSentDialog from "../components/ConfirmSentDialog";
 import CopyEmailModal from "../components/CopyEmailModal";
 import DataTable, { type Column } from "../components/DataTable";
@@ -33,11 +34,24 @@ export default function Emails() {
   const [composing, setComposing] = useState<HrEmail | null>(null);
   const [confirming, setConfirming] = useState<HrEmail | null>(null);
 
+  const query = filters.query();
   const list = useQuery({
-    queryKey: ["emails", filters.query()],
-    queryFn: () => api<Page<HrEmail>>(`/api/emails?${filters.query()}`),
+    queryKey: ["emails", query],
+    queryFn: () => api<Page<HrEmail>>(`/api/emails?${query}`),
     placeholderData: keepPreviousData,
   });
+  const rows = list.data?.items;
+  const remove = useBulkDelete<number>({
+    endpoint: "/api/emails/delete",
+    noun: ["email", "emails"],
+    invalidate: [["emails"], ["nav-count"]],
+    // Deleting a whole page steps back to the one before, which still has rows.
+    onDeleted: (deleted) => {
+      if (rows && deleted >= rows.length && filters.page > 1) filters.setPage(filters.page - 1);
+    },
+  });
+  // A selection belongs to the rows on screen: a new page or filter clears it.
+  useEffect(() => remove.clear(), [query]);
   const markEmailed = useMutation({
     mutationFn: (email: HrEmail) => api<HrEmail>(`/api/emails/${email.id}/mark-emailed`, { method: "POST" }),
     onSuccess: (_, email) => {
@@ -120,8 +134,10 @@ export default function Emails() {
       <DataTable
         label="HR emails"
         columns={columns}
-        rows={list.data?.items}
+        rows={rows}
         rowKey={(row) => row.id}
+        selection={{ ...remove.selection, rowLabel: (id) => `Select ${rows?.find((r) => r.id === id)?.email ?? id}` }}
+        toolbar={remove.bar}
         loading={list.isFetching && !list.data}
         error={list.isError ? `Couldn't load emails. ${errorMessage(list.error)}` : null}
         empty={
@@ -141,6 +157,7 @@ export default function Emails() {
           }}
         />
       )}
+      {remove.dialog}
       {confirming && (
         <ConfirmSentDialog
           email={confirming.email}

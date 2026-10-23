@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { LOG_STYLE, logKind } from "./logLine";
 
 const MAX_LINES = 2000;
 
@@ -50,11 +51,17 @@ export default function LogStream({ runId }: { runId: number | null }) {
       <div ref={box} role="log" aria-live="off" className="min-h-0 flex-1 overflow-auto rounded-b-lg bg-[#f6f7f5] px-4 py-3 font-mono text-[12.5px] leading-relaxed">
         {runId === null && <p className="font-sans text-sm text-muted">No runs yet. Press Start to begin; the log shows up here.</p>}
         {runId !== null && lines.length === 0 && !ended && <p className="font-sans text-sm text-muted">Waiting for output…</p>}
-        {lines.map((line) => (
-          <div key={line.id} className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
-            {line.text || " "}
-          </div>
-        ))}
+        {lines.map((line, i) => {
+          // One blank line is enough between blocks.
+          if (!line.text.trim()) return i > 0 && lines[i - 1].text.trim() ? <div key={line.id} className="h-2" /> : null;
+          const kind = logKind(line.text);
+          if (kind === "divider") return <hr key={line.id} className="my-2 border-line" />;
+          return (
+            <div key={line.id} data-kind={kind} className={`whitespace-pre-wrap break-words [overflow-wrap:anywhere] ${LOG_STYLE[kind]}`}>
+              {line.text}
+            </div>
+          );
+        })}
         {ended && <p className="mt-2 font-sans text-sm text-muted">End of this run's log.</p>}
       </div>
       </div>

@@ -70,10 +70,7 @@ def claude_create_client() -> "anthropic.Anthropic | None":
         # Validates both the API key and the configured model in one cheap call.
         model_info = client.models.retrieve(claude_model)
 
-        print_lg("---- SUCCESSFULLY CREATED CLAUDE CLIENT! ----")
-        print_lg(f"Using Model: {getattr(model_info, 'display_name', model_info.id)} ({model_info.id})")
-        print_lg("Check Settings → AI and the API key in .env.\n")
-        print_lg("---------------------------------------------")
+        print_lg(f"Connected to Claude, model {getattr(model_info, 'display_name', model_info.id)} ({model_info.id}).")
         return client
     except anthropic.AuthenticationError as e:
         claude_show_error_alert(
@@ -143,7 +140,6 @@ def claude_extract_skills(client: "anthropic.Anthropic", job_description: str) -
       required_skills, nice_to_have.
     '''
     try:
-        print_lg("-- EXTRACTING SKILLS FROM JOB DESCRIPTION using Claude")
         prompt = extract_skills_prompt.format(job_description)
         return claude_completion(
             client, prompt, response_schema=claude_extract_skills_response_schema, effort="low"
@@ -166,7 +162,6 @@ def claude_answer_question(
     Generates a concise, human-like answer for an application question using Claude.
     '''
     try:
-        print_lg(f"-- ANSWERING QUESTION using Claude AI: {question}")
         prompt = ai_answer_prompt.format(user_information_all or "N/A", question)
 
         if options and question_type in ('single_select', 'multiple_select'):
@@ -200,7 +195,6 @@ def claude_check_job_relevance(
       matched_skills (list), missing_skills (list).
     * Raises on API error so the caller can decide to apply anyway (fail-open).
     '''
-    print_lg("-- CHECKING JOB RELEVANCE using Claude")
     company_line = (
         f" (Company: {about_company})" if about_company and about_company != "Unknown" else ""
     )
