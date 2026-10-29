@@ -341,3 +341,19 @@ def test_follow_xpaths_still_match_old_markup():
     )
     assert len(page.xpath(ui.FOLLOW_COMPANY_CHECKBOX_XPATH)) == 1
     assert page.xpath(ui.FOLLOW_COMPANY_LABEL_XPATH)[0].tag == "label"
+
+
+def test_follow_native_checkbox():
+    # 2026-10-29: the aria-label moved onto a hidden native input; the visible target is its <label>.
+    markup = (
+        '<div><div><input id="_r_g0_" aria-label="Follow Acme to stay up to date with their page" '
+        'type="checkbox"{}><label for="_r_g0_"></label></div><p>Follow Acme to stay up to date with their page</p></div>'
+    )
+    page = html.fromstring(markup.format(' checked=""'))
+    targets = page.xpath(ui.FOLLOW_COMPANY_LABEL_XPATH)
+    boxes = page.xpath(ui.FOLLOW_COMPANY_CHECKBOX_XPATH)
+    assert [(t.tag, t.get("for")) for t in targets] == [("label", "_r_g0_")]
+    assert [b.get("id") for b in boxes] == ["_r_g0_"]
+    assert ui.follow_checked(targets[0], boxes[0]) is True
+    page = html.fromstring(markup.format(""))
+    assert ui.follow_checked(page.xpath(ui.FOLLOW_COMPANY_LABEL_XPATH)[0], page.xpath(ui.FOLLOW_COMPANY_CHECKBOX_XPATH)[0]) is False
