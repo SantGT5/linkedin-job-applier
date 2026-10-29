@@ -216,9 +216,12 @@ def page_button_xpath(page: int) -> str:
 
 
 # < Search filters on /jobs/search-results/
-# Pills carry aria-label="Filter by <name>": toggles are role="radio" with aria-checked, dropdowns
-# are role="button" and show the chosen value ("Filter by Contract") once set. The location sits
-# in the results header as aria-label="Location <name>".
+# Pills carry aria-label="Filter by <name>". Toggles were role="radio" with aria-checked; since
+# 2026-10-29 they are a hidden native <input type="checkbox" aria-label="Filter by <name>"> (state:
+# `checked`) with a visible sibling <label for> (the click target). The Employment type options
+# changed the same way, from role="checkbox" with aria-checked. Dropdown pills are role="button"
+# and show the chosen value ("Filter by Contract") once set. The location sits in the results
+# header as aria-label="Location <name>".
 JOB_TYPES = ["Full-time", "Part-time", "Contract", "Temporary", "Volunteer", "Internship", "Other"]
 ON_SITE_TYPES = ["On-site", "Remote", "Hybrid"]
 SEARCH_HEADER_XPATH = "//*[@componentkey='searchResultsHeaderComponent']"
@@ -235,10 +238,30 @@ def _xpath_literal(text: str) -> str:
     return "concat('" + "', \"'\", '".join(text.split("'")) + "')"
 
 
+def checkbox_label_xpath(input_xpath: str) -> str:
+    """The visible <label> of a hidden native checkbox: the element to click (the input is never displayed)."""
+    return f"{input_xpath}/following-sibling::label[1]"
+
+
+def filter_checkbox_xpath(name: str) -> str:
+    """The native checkbox behind the "Filter by <name>" pill: where the pill's state is."""
+    return f"//input[@type='checkbox'][@aria-label={_xpath_literal(f'Filter by {name}')}]"
+
+
 def filter_pill_xpath(name: str) -> str:
-    """The clickable pill (role radio/button) labelled "Filter by <name>"."""
+    """The clickable pill (role radio/button) labelled "Filter by <name>", or its checkbox's label."""
     label = _xpath_literal(f"Filter by {name}")
-    return f"//*[@aria-label={label}]/ancestor-or-self::*[@role='radio' or @role='button'][1]"
+    return (
+        f"//*[@aria-label={label}]/ancestor-or-self::*[@role='radio' or @role='button'][1]"
+        f" | {checkbox_label_xpath(filter_checkbox_xpath(name))}"
+    )
+
+
+def employment_option_xpath(name: str) -> str:
+    """The clickable "Employment type" option <name>: the role="checkbox" control, or its checkbox's label."""
+    label = _xpath_literal(name)
+    checkbox = f"//input[@type='checkbox'][@aria-label={label}]"
+    return f"//*[@role='checkbox'][@aria-label={label}] | {checkbox_label_xpath(checkbox)}"
 
 
 # "Filter by Employment type" (none chosen), "Filter by Employment type, 2 filters are selected"
@@ -263,13 +286,21 @@ def _attr(element, name: str) -> str | None:
     return getter(name) if getter else element.get(name)
 
 
+def _checked(element) -> bool:
+    """Ticked state: aria-checked on role radio/checkbox controls, else the native `checked`."""
+    aria_checked = _attr(element, "aria-checked")
+    if aria_checked is not None:
+        return aria_checked == "true"
+    return _attr(element, "checked") is not None
+
+
 def read_employment_options(page) -> dict[str, bool]:
     """Employment types offered in the open dropdown, and whether each is ticked."""
     options: dict[str, bool] = {}
-    for box in _find(page, "//*[@role='checkbox'][@aria-label]"):
+    for box in _find(page, "//*[@role='checkbox'][@aria-label] | //input[@type='checkbox'][@aria-label]"):
         label = _attr(box, "aria-label")
         if label in JOB_TYPES and label not in options:
-            options[label] = _attr(box, "aria-checked") == "true"
+            options[label] = _checked(box)
     return options
 
 
@@ -277,10 +308,9 @@ def read_applied_filters(page) -> dict:
     """The filters LinkedIn actually applied, read from the results page."""
     on_site = []
     for name in ON_SITE_TYPES:
-        for pill in _find(page, filter_pill_xpath(name)):
-            if _attr(pill, "role") == "button" or _attr(pill, "aria-checked") == "true":
-                on_site.append(name)
-                break
+        pills = _find(page, filter_pill_xpath(name)) + _find(page, filter_checkbox_xpath(name))
+        if any(_attr(pill, "role") == "button" or _checked(pill) for pill in pills):
+            on_site.append(name)
     job_type = []
     for pill in _find(page, EMPLOYMENT_TYPE_PILL_XPATH):
         labels = [_attr(pill, "aria-label") or ""] + [
@@ -295,7 +325,8 @@ def read_applied_filters(page) -> dict:
     locations = _find(page, LOCATION_LABEL_XPATH)
     location = (_attr(locations[0], "aria-label") or "")[len("Location "):] if locations else ""
     easy_apply = any(
-        _attr(p, "aria-checked") == "true" for p in _find(page, filter_pill_xpath("Easy Apply"))
+        _checked(p)
+        for p in _find(page, filter_pill_xpath("Easy Apply")) + _find(page, filter_checkbox_xpath("Easy Apply"))
     )
     return {"job_type": job_type, "on_site": on_site, "location": location, "easy_apply": easy_apply}
 
@@ -319,12 +350,17 @@ def missing_filters(expected: dict, applied: dict) -> list[str]:
 # < Follow company (last step of Easy Apply)
 # LinkedIn replaced `input#follow-company-checkbox` with a role="checkbox" div labelled
 # "Follow <Company> to stay up to date with their page" (hidden input inside, random id).
+# Since 2026-10-29 that label is a hidden native <input type="checkbox"> with the same aria-label;
+# its visible sibling <label for> is the click target.
 FOLLOW_COMPANY_LABEL_XPATH = (
     ".//*[@role='checkbox'][contains(@aria-label, 'to stay up to date')]"
-    " | .//label[@for='follow-company-checkbox']"
+    " | "
+    + checkbox_label_xpath(".//input[@type='checkbox'][contains(@aria-label, 'to stay up to date')]")
+    + " | .//label[@for='follow-company-checkbox']"
 )
 FOLLOW_COMPANY_CHECKBOX_XPATH = (
     ".//*[@role='checkbox'][contains(@aria-label, 'to stay up to date')]//input[@type='checkbox']"
+    " | .//input[@type='checkbox'][contains(@aria-label, 'to stay up to date')]"
     " | .//input[@id='follow-company-checkbox' and @type='checkbox']"
 )
 

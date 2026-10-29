@@ -110,3 +110,53 @@ def test_read_several_job_types():
     options = ui.read_employment_options(page)
     assert [name for name, ticked in options.items() if ticked] == ["Contract", "Full-time"]
     assert sorted(ui.read_applied_filters(page)["job_type"]) == ["Contract", "Full-time"]
+
+
+# 2026-10-29: LinkedIn swapped the role="radio"/"checkbox" widgets for hidden native checkboxes
+# (opacity 0, never displayed) with a visible sibling <label for>. State is the `checked`
+# attribute; the click goes to the label.
+NATIVE_PILLS = (
+    '<div><nav>'
+    '<div aria-label="Filter by Remote"><input aria-label="Filter by Remote" id="_r_fk_" type="checkbox" checked="">'
+    '<label for="_r_fk_">Remote</label></div>'
+    '<div aria-label="Filter by Easy Apply"><input aria-label="Filter by Easy Apply" id="_r_fm_" type="checkbox">'
+    '<label for="_r_fm_">Easy Apply</label></div>'
+    '</nav><nav>'  # LinkedIn renders the pill bar twice
+    '<div aria-label="Filter by Remote"><input aria-label="Filter by Remote" id="_r_x1_" type="checkbox" checked="">'
+    '<label for="_r_x1_">Remote</label></div>'
+    '</nav></div>'
+)
+NATIVE_DROPDOWN = (
+    '<div>'
+    '<div><div><input id="_r_ak_" aria-label="Full-time" type="checkbox" checked=""><label for="_r_ak_"></label></div><p>Full-time</p></div>'
+    '<div><div><input id="_r_ag_" aria-label="Contract" type="checkbox"><label for="_r_ag_"></label></div><p>Contract</p></div>'
+    '<div><input aria-label="Filter by Remote" id="_r_fk_" type="checkbox" checked=""><label for="_r_fk_">Remote</label></div>'
+    '</div>'
+)
+
+
+def test_read_applied_filters_native_checkboxes():
+    applied = ui.read_applied_filters(html.fromstring(NATIVE_PILLS))
+    assert applied["on_site"] == ["Remote"]
+    assert applied["easy_apply"] is False
+
+
+def test_read_applied_filters_native_easy_apply_ticked():
+    page = html.fromstring(NATIVE_PILLS.replace('id="_r_fm_" type="checkbox"', 'id="_r_fm_" type="checkbox" checked=""'))
+    assert ui.read_applied_filters(page)["easy_apply"] is True
+
+
+def test_filter_pill_xpath_targets_label_of_native_checkbox():
+    page = html.fromstring(NATIVE_PILLS)
+    easy = page.xpath(ui.filter_pill_xpath("Easy Apply"))
+    assert [(e.tag, e.get("for")) for e in easy] == [("label", "_r_fm_")]
+    assert [e.get("for") for e in page.xpath(ui.filter_pill_xpath("Remote"))] == ["_r_fk_", "_r_x1_"]
+
+
+def test_read_employment_options_native_checkboxes():
+    assert ui.read_employment_options(html.fromstring(NATIVE_DROPDOWN)) == {"Full-time": True, "Contract": False}
+
+
+def test_employment_option_xpath_targets_label():
+    page = html.fromstring(NATIVE_DROPDOWN)
+    assert [(e.tag, e.get("for")) for e in page.xpath(ui.employment_option_xpath("Contract"))] == [("label", "_r_ag_")]

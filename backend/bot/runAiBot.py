@@ -283,9 +283,7 @@ def set_job_types(wanted: list[str]) -> None:
     changed = False
     for name, ticked in read_employment_options(driver).items():
         if ticked != (name in wanted):
-            changed |= click_displayed(
-                driver, f"//*[@role='checkbox'][@aria-label='{name}']"
-            )
+            changed |= click_displayed(driver, employment_option_xpath(name))
             sleep(0.3)
     if changed and click_displayed(driver, FILTER_SHOW_RESULTS_XPATH):
         wait_for_results()
