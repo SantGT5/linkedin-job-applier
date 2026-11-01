@@ -23,7 +23,7 @@ Prerequisites: [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 1. Get the code and create your `.env`:
 
    ```sh
-   git clone <this repo> applier && cd applier
+   git clone <this repo> && cd linkedin-job-applier
    cp .env.example .env
    ```
 
