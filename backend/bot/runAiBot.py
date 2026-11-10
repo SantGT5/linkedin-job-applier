@@ -25,6 +25,7 @@ from random import choice, randint, shuffle
 from selenium.common.exceptions import (
     ElementClickInterceptedException,
     NoSuchElementException,
+    StaleElementReferenceException,
     TimeoutException,
     WebDriverException,
 )
@@ -346,34 +347,41 @@ def apply_filters() -> None:
         "easy_apply": bool(easy_apply_only),
     }
     wait_for_results()
-    missing: list[str] = []
+    # Until the page is read, every wanted filter counts as unconfirmed.
+    missing: list[str] = [name for name, value in expected.items() if value]
     for attempt in range(3):
-        applied = read_applied_filters(driver)
-        if expected["job_type"]:
-            applied["job_type"], offered = applied_job_types()
-            unavailable = [t for t in expected["job_type"] if offered and t not in offered]
-            if unavailable:
-                print_lg(
-                    f"LinkedIn doesn't offer employment type(s) {unavailable} for this search; using the rest."
-                )
-                expected["job_type"] = [t for t in expected["job_type"] if t not in unavailable]
-        missing = missing_filters(expected, applied)
-        print_lg(f"Filters on the results page: {applied}")
-        if not missing or attempt == 2:
-            break
-        print_lg(f"LinkedIn didn't apply {missing}; setting them on the page (attempt {attempt + 1}).")
-        if "location" in missing:
-            set_location(expected["location"])
-        if "job_type" in missing:
-            set_job_types(expected["job_type"])
-        if "on_site" in missing:
-            for name in expected["on_site"]:
-                if name not in read_applied_filters(driver)["on_site"]:
-                    if click_displayed(driver, filter_pill_xpath(name)):
-                        wait_for_results()
-                    else:
-                        print_lg(f'No "{name}" filter on the results page.')
-        if "easy_apply" in missing and click_displayed(driver, filter_pill_xpath("Easy Apply")):
+        try:
+            applied = read_applied_filters(driver)
+            if expected["job_type"]:
+                applied["job_type"], offered = applied_job_types()
+                unavailable = [t for t in expected["job_type"] if offered and t not in offered]
+                if unavailable:
+                    print_lg(
+                        f"LinkedIn doesn't offer employment type(s) {unavailable} for this search; using the rest."
+                    )
+                    expected["job_type"] = [t for t in expected["job_type"] if t not in unavailable]
+            missing = missing_filters(expected, applied)
+            print_lg(f"Filters on the results page: {applied}")
+            if not missing or attempt == 2:
+                break
+            print_lg(f"LinkedIn didn't apply {missing}; setting them on the page (attempt {attempt + 1}).")
+            if "location" in missing:
+                set_location(expected["location"])
+            if "job_type" in missing:
+                set_job_types(expected["job_type"])
+            if "on_site" in missing:
+                for name in expected["on_site"]:
+                    if name not in read_applied_filters(driver)["on_site"]:
+                        if click_displayed(driver, filter_pill_xpath(name)):
+                            wait_for_results()
+                        else:
+                            print_lg(f'No "{name}" filter on the results page.')
+            if "easy_apply" in missing and click_displayed(driver, filter_pill_xpath("Easy Apply")):
+                wait_for_results()
+        except StaleElementReferenceException:
+            # Each filter change re-renders the results; elements found a moment ago are gone.
+            print_lg(f"Results page re-rendered while reading filters; retrying (attempt {attempt + 1}).")
+            close_popup()
             wait_for_results()
 
     global pause_after_filters
